@@ -1,7 +1,7 @@
 schema_version: 1
 
 context:
-  version: 1.5.0
+  version: "1.6.0"
 
 package:
   name: sagemaker-serve
@@ -9,10 +9,10 @@ package:
 
 source:
   url: https://pypi.org/packages/source/s/sagemaker-serve/sagemaker_serve-${{ version }}.tar.gz
-  sha256: 718aafdbdecbf174da46fe35072f6a83be9b16a9830555e7b7b23184be34c742
+  sha256: e9ee2c1e6e50dbf91e93e1f522be3895c9067159f30733a9ce7b2f92fb00c49b
 
 build:
-  number: 1
+  number: 0
   noarch: python
   script: |
     ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
