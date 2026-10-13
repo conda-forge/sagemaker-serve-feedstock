@@ -1,7 +1,7 @@
 schema_version: 1
 
 context:
-  version: "1.12.0"
+  version: "1.24.0"
 
 package:
   name: sagemaker-serve
@@ -9,7 +9,7 @@ package:
 
 source:
   url: https://pypi.org/packages/source/s/sagemaker-serve/sagemaker_serve-${{ version }}.tar.gz
-  sha256: 86fd61770a4e1017b61565eb6dd8c8f480d4555fd138543319eab0969ed18c4e
+  sha256: 9ba6aec2d20f800e30b643a65f7194e1ce9ea218bf9b0f1a70521ed0e549209e
 
 build:
   number: 0
@@ -27,12 +27,15 @@ requirements:
     - pip
   run:
     - python >=${{ python_min }}
-    - sagemaker-core >=2.5.0
-    - sagemaker-train >=1.5.0
+    - sagemaker-core >=2.24.0
+    - sagemaker-train >=1.24.0
     - sagemaker-schema-inference-artifacts
     - boto3 >=1.42.2,<2.0
     - botocore >=1.35.75,<2.0
-    - protobuf >=4.25.8,<7.0
+    # Raised lower bound from 4.25.8 to 5.29.5: databricks-sdk (via mlflow) forbids
+    # protobuf 5.26-5.28.* and 5.29.0-4, so the old floor still allowed the solver to
+    # pick 5.28.3 and fail `pip check`.
+    - protobuf >=5.29.5,<7.0
     - deepdiff
     - mlflow
     - tqdm
@@ -44,13 +47,19 @@ requirements:
     - pytest
 
 tests:
-  - python:
-      imports:
-        - sagemaker.serve
-      pip_check: true
-      python_version:
-        - ${{ python_min }}.*
-        - "*"
+  - script:
+      # sagemaker.serve's import chain reaches AIRHub, which builds boto3 clients
+      # at class-definition (import) time, so a region must be set or `import
+      # sagemaker.serve` raises NoRegionError. Upstream fix tracked in
+      # aws/sagemaker-python-sdk PR #6401; remove this once a release includes it.
+      env:
+        AWS_DEFAULT_REGION: us-east-1
+      content:
+        - python -c "import sagemaker.serve"
+        - pip check
+    requirements:
+      run:
+        - pip
 
 about:
   summary: SageMaker Serve package for model serving and deployment
